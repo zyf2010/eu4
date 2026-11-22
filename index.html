@@ -67,7 +67,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <h1>欧 陆 风 云 · 数 据 台</h1>
-  <div class="sub">第 3 回合 · 更新于 2026-11-22 15:09</div>
+  <div class="sub">第 3 回合 · 更新于 2026-11-22 15:13</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -219,7 +219,8 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
     <label>器械破城值</label>
     <select id="m"><option value="0">无器械</option><option value="15">攻城器械 15</option><option value="20">热那亚石弩 20</option><option value="25">加农炮 25</option><option value="40">长管射石炮 40</option></select>
     <label>攻方平均攻击</label><input type="number" id="af" value="4" step="0.5">
-    <label>战术加成（攻方总攻）</label><input type="number" id="tb" value="0">
+    <label>攻方总攻加成（武将／战术／建筑）</label><input type="number" id="tb" value="0">
+    <label>器械数量</label><input type="number" id="en" value="0" step="1">
     <div class="out" id="out"></div>
   </div>
 </section>
@@ -292,18 +293,18 @@ function renderT(){
 $('#qt').oninput=renderT; $('#ft').onchange=renderT;
 function calc(){
   const a=+$('#a').value,d=+$('#d').value,df=+$('#df').value,af=+$('#af').value,tb=+$('#tb').value;
-  const bl=+$('#lv').value,wall=+$('#w').value,eng=+$('#m').value;
-  const need=d*2, breach=eng+a*af*0.5+tb, def=bl+wall+d*df;
+  const bl=+$('#lv').value,wall=+$('#w').value,eng=+$('#m').value*(+$('#en').value||1);
+  const need=d*2, bonus=(a>=d*4?10:0), breach=eng+(a*af+tb)*0.5+bonus, def=bl+wall+d*df;
   const canSiege=a>=need;
   const canBreak=breach>=def;
   let s=`<div>2 倍门槛：<b>${need}</b> 兵　${canSiege?'<span class="ok">✔ 可发起攻城</span>':'<span class="no">✘ 不足，只能围城</span>'}</div>`;
-  s+=`<div>破城力：器械 ${eng} + 兵力 ${a}×攻 ${af}×0.5 + 战术 ${tb} = <b>${breach.toFixed(1)}</b></div>`;
+  s+=`<div>破城力：器械 ${eng} + (兵力 ${a}×攻 ${af} + 加成 ${tb})×0.5 ${bonus?'+ 4倍兵力 +10':''} = <b>${breach.toFixed(1)}</b></div>`;
   s+=`<div>城防力：基础 ${bl} + 城墙 ${wall} + 守军 ${d}×${df} = <b>${def.toFixed(1)}</b></div>`;
   s+=canBreak?`<div class="ok">✔ 破墙成功，攻方阵亡 5%（约 ${Math.max(1,Math.ceil(a*0.05))} 兵）</div>`
              :`<div class="no">✘ 破墙失败，攻方阵亡 15%（约 ${Math.max(1,Math.ceil(a*0.15))} 兵）</div>`;
   $('#out').innerHTML=s;
 }
-['a','d','df','lv','w','m','af','tb'].forEach(id=>{const el=$('#'+id);el.oninput=calc;el.onchange=calc;});
+['a','d','df','lv','w','m','af','tb','en'].forEach(id=>{const el=$('#'+id);el.oninput=calc;el.onchange=calc;});
 
 
 function rc4(key,data){
