@@ -67,7 +67,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <h1>欧 陆 风 云 · 数 据 台</h1>
-  <div class="sub">第 3 回合 · 更新于 2026-11-22 14:47</div>
+  <div class="sub">第 3 回合 · 更新于 2026-11-22 14:48</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -175,6 +175,13 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
     <input type="password" id="ep" placeholder="访问密码" style="width:100%;margin-top:10px;background:#131c2c;border:1px solid #24334a;color:#e9e9e2;border-radius:9px;padding:10px 12px;font-size:15px">
     <button id="eb" style="width:100%;margin-top:10px;background:#c9a75f;color:#1a1408;border:0;border-radius:10px;padding:12px;font-size:15px;font-weight:600">验证并查看</button>
     <div id="eout" style="margin-top:12px"></div>
+  </div>
+  <div class="card">
+    <div class="name">GM 汇总</div>
+    <div class="dim" style="font-size:12px;margin:4px 0 8px">把群里的回执整段粘进来，自动统计</div>
+    <textarea id="gmp" placeholder="【事件回执】&#10;国：意大利&#10;选择：甲 · 雇佣&#10;……" style="width:100%;height:130px;background:#0e1626;color:#cfd8e3;border:1px solid #24334a;border-radius:9px;padding:8px;font-size:12px"></textarea>
+    <button id="gmb" style="width:100%;margin-top:8px;background:#141d2c;border:1px solid #2a3a52;color:#c9a75f;border-radius:9px;padding:10px;font-size:14px">解析并汇总</button>
+    <div id="gmout" style="margin-top:10px"></div>
   </div>
 </section>
 <section id="g" class="hide">
@@ -507,6 +514,34 @@ document.getElementById('gb').onclick=()=>{
       };
       document.getElementById('eret').scrollIntoView({behavior:'smooth',block:'nearest'});
     });
+  };
+})();
+
+
+(function(){
+  const ta=document.getElementById('gmp'),btn=document.getElementById('gmb'),out=document.getElementById('gmout');
+  btn.onclick=()=>{
+    const blocks=ta.value.split(/【事件回执】/).filter(x=>x.trim());
+    const rows=blocks.map(b=>{
+      const g=k=>((b.match(new RegExp(k+'：(.+)'))||[])[1]||'').trim();
+      return {c:g('国'),e:g('事件'),k:g('选择')};
+    }).filter(r=>r.c);
+    if(!rows.length){out.innerHTML='<div class="no">没解析到回执</div>';return;}
+    const cnt={};
+    rows.forEach(r=>{const key=r.k.split('·')[0].trim();cnt[key]=(cnt[key]||0)+1;});
+    const summary=Object.entries(cnt).map(([k,v])=>`${k} ${v} 国`).join('　');
+    out.innerHTML=`<div class="card" style="margin:0;padding:10px">
+      <div style="font-size:13px;color:#e4c98a">共 ${rows.length} 份回执　${summary}</div>
+      <table style="margin-top:8px"><tr><th>国</th><th>选择</th></tr>
+      ${rows.map(r=>`<tr><td>${r.c}</td><td>${r.k}</td></tr>`).join('')}</table>
+      <button id="gmc" style="width:100%;margin-top:8px;background:#c9a75f;color:#1a1408;border:0;border-radius:9px;padding:9px;font-weight:600">复制汇总</button>
+    </div>`;
+    document.getElementById('gmc').onclick=()=>{
+      const txt=`【事件汇总】\n${summary}\n\n`+rows.map(r=>`${r.c}：${r.k}`).join('\n');
+      const t=document.createElement('textarea');t.value=txt;document.body.appendChild(t);t.select();
+      document.execCommand('copy');t.remove();
+      document.getElementById('gmc').textContent='已复制';
+    };
   };
 })();
 
