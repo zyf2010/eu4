@@ -62,7 +62,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <h1>欧 陆 风 云 · 数 据 台</h1>
-  <div class="sub">第 3 回合 · 更新于 2026-11-22 13:39</div>
+  <div class="sub">第 3 回合 · 更新于 2026-11-22 13:42</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -336,7 +336,7 @@ document.getElementById('gb').onclick=()=>{
   const cardBox=document.getElementById('mcard');
   img.src='data:image/png;base64,'+MAPD.img;
   const mk=(l,tier)=>{
-    const fs = tier===0 ? Math.max(7,Math.min(15,6+Math.sqrt(l.a)/3.6))
+    const fs = tier===0 ? Math.max(6,Math.min(10,5+Math.sqrt(l.a)/5.2))
                         : Math.max(6,Math.min(10,5+Math.sqrt(l.a)/4.2));
     return `<span class="plab" data-t="${tier}" style="left:${l.x*100}%;top:${l.y*100}%;
       font-size:${fs}px;color:${l.c}">${l.n}</span>`;
@@ -349,7 +349,7 @@ document.getElementById('gb').onclick=()=>{
   const states=[...labBox.querySelectorAll('.plab[data-t="0"]')];
   function apply(){
     stage.style.transform=`translate(${tx}px,${ty}px) scale(${s})`;
-    const showState=s>=base*1.6, showProv=s>=base*3.2;
+    const showState=s>=base*0.95, showProv=s>=base*1.9;
     states.forEach(el=>el.style.display=showState?'block':'none');
     provs.forEach(el=>el.style.display=showProv?'block':'none');
   }
