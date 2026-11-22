@@ -38,12 +38,17 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 .out{margin-top:14px;padding:12px;border-radius:12px;background:#101827;border:1px solid #223046;font-size:14px;line-height:1.9}
 .ok{color:#7fd6a8} .no{color:#ff9b85}
 footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
+#toc{position:sticky;top:96px;z-index:6;display:flex;gap:8px;overflow-x:auto;padding:10px 0 12px;
+  background:linear-gradient(180deg,#0b1220 70%,rgba(11,18,32,0));-webkit-overflow-scrolling:touch}
+#toc button{flex:0 0 auto;background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:999px;
+  padding:7px 14px;font-size:13px;white-space:nowrap}
+#toc button.on{color:#1a1408;background:#c9a75f;border-color:#c9a75f;font-weight:600}
 </style>
 </head>
 <body>
 <header>
   <h1>欧 陆 风 云 · 数 据 台</h1>
-  <div class="sub">第 3 回合 · 更新于 2026-11-22 13:03</div>
+  <div class="sub">第 3 回合 · 更新于 2026-11-22 13:05</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="t">城市</button>
@@ -121,6 +126,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
     <div class="name" style="color:#e8d7a8">《欧陆风云》纪事</div>
     <div class="dim" style="font-size:12px;margin-top:4px">始于 1600 年春，一季一回合</div>
   </div>
+  <div id="toc"></div>
   <div id="hl"></div>
 </section>
 <section id="g" class="hide">
@@ -253,20 +259,27 @@ document.getElementById('gb').onclick=()=>{
 
 (function(){
   const box=document.getElementById('hl');
-  box.innerHTML=HIST.map(e=>{
+  box.innerHTML=HIST.map((e,i)=>{
     const sc=(e.scenes||[]).map(x=>`
       <div style="margin:14px 0 0">
         <div style="font-size:13px;color:#c9a75f;letter-spacing:1px">${x.h||''}</div>
         ${(x.p||[]).map(p=>`<p style="margin:6px 0;font-size:14px;line-height:1.9;color:#d9d3c4">${p}</p>`).join('')}
         ${x.q?`<div style="margin:8px 0 0;padding:8px 12px;border-left:3px solid #8a6d2f;background:#171208;color:#e8d7a8;font-size:14px;line-height:1.7">「${x.q.text}」<div style="font-size:11px;color:#8d7d5a;margin-top:4px">—— ${x.q.who}</div></div>`:''}
       </div>`).join('');
-    return `<div class="card" style="border-left:3px solid #8a6d2f;margin-bottom:14px">
+    return `<div class="card" id="h${i}" style="border-left:3px solid #8a6d2f;margin-bottom:14px;scroll-margin-top:150px">
       <div class="dim" style="font-size:12px">${e.time} · ${e.era}</div>
       <div class="name" style="margin:2px 0 2px;font-size:17px;color:#f0e6cf">${e.title}</div>
       ${sc}
       <div style="margin-top:12px">${(e.notes||[]).map(n=>`<span class="tag" style="margin:2px 4px 2px 0">${n}</span>`).join('')}</div>
     </div>`;
   }).join('');
+  const toc=document.getElementById('toc');
+  toc.innerHTML=HIST.map((e,i)=>`<button data-i="${i}">${e.era}${i?'':' · '+e.time.split(' · ')[0]}</button>`).join('');
+  toc.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    document.getElementById('h'+b.dataset.i).scrollIntoView({behavior:'smooth',block:'start'});
+    toc.querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+  });
 })();
 
 renderC(); renderT(); calc();
