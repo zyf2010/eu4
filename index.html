@@ -43,12 +43,16 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 #toc button{flex:0 0 auto;background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:999px;
   padding:7px 14px;font-size:13px;white-space:nowrap}
 #toc button.on{color:#1a1408;background:#c9a75f;border-color:#c9a75f;font-weight:600}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch}
+.chips button{flex:0 0 auto;background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:999px;
+  padding:7px 14px;font-size:13px;white-space:nowrap}
+.chips button.on{color:#1a1408;background:#c9a75f;border-color:#c9a75f;font-weight:600}
 </style>
 </head>
 <body>
 <header>
   <h1>欧 陆 风 云 · 数 据 台</h1>
-  <div class="sub">第 3 回合 · 更新于 2026-11-22 13:05</div>
+  <div class="sub">第 3 回合 · 更新于 2026-11-22 13:07</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="t">城市</button>
@@ -69,6 +73,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
       <option value="nc">按城数</option>
     </select>
   </div>
+  <div class="chips" id="cf"></div>
   <div id="cl"></div>
 </section>
 <section id="t" class="hide">
@@ -173,8 +178,11 @@ document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{
 });
 function card(c){
   const rk=c.risk?`<span class="tag warn">风险城 ${c.risk}</span>`:'';
+  const eg=c.inc>=150?'S':c.inc>=100?'A':c.inc>=80?'B':'C';
+  const mg=c.tr>=20?'S':c.tr>=16?'A':c.tr>=12?'B':'C';
   return `<div class="card"><div class="row"><div class="name">${c.n}
     <span class="tag ${c.st==='已结算'?'done':''}">${c.st}</span>${rk}</div></div>
+    <div style="margin-top:6px"><span class="tag">经济 ${eg}</span><span class="tag">军事 ${mg}</span></div>
     <div class="grid">
       <div><div class="k">金币</div><div class="v">${c.g}</div></div>
       <div><div class="k">收入</div><div class="v">${c.inc}</div></div>
@@ -186,12 +194,26 @@ function card(c){
     <div class="dim" style="font-size:12px;margin-top:6px">${c.rel} · ${c.tech}${c.pick!=='无'?'（'+c.pick+'）':''} · ${c.cul}文化 · ${c.trait}特质</div>
   </div>`;
 }
+
+let CF='all';
 function renderC(){
   const q=$('#q').value.trim(), k=$('#sort').value;
   let a=C.filter(c=>!q||c.n.includes(q)||c.cul.includes(q)||c.trait.includes(q)||c.rel.includes(q));
+  if(CF==='s') a=a.filter(c=>c.inc>=150);
+  else if(CF==='a') a=a.filter(c=>c.inc>=100&&c.inc<150);
+  else if(CF==='c') a=a.filter(c=>c.inc<100);
+  else if(CF==='b') a=a.filter(c=>c.bar);
+  else if(CF==='r') a=a.filter(c=>c.risk>0);
   a=[...a].sort((x,y)=>y[k]-x[k]);
-  $('#cl').innerHTML=a.map(card).join('');
+  $('#cl').innerHTML=a.length?a.map(card).join(''):'<div class="card dim">没有符合条件的国家</div>';
 }
+const CFDEF=[['all','全部'],['s','强权 ≥150'],['a','中坚 100-149'],['c','边缘 <100'],['b','有兵营'],['r','有风险城']];
+$('#cf').innerHTML=CFDEF.map(([k,t])=>`<button data-k="${k}" class="${k==='all'?'on':''}">${t}</button>`).join('');
+$('#cf').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+  CF=b.dataset.k;
+  $('#cf').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); renderC();
+});
 $('#q').oninput=renderC; $('#sort').onchange=renderC;
 const cs=[...new Set(T.map(t=>t.c))];
 $('#ft').innerHTML='<option value="">全部国家</option>'+cs.map(x=>`<option>${x}</option>`).join('');
