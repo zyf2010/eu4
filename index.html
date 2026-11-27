@@ -70,7 +70,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">欧 陆 风 云 · 数 据 台</h1><button id="idbtn" style="background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:9px;padding:6px 10px;font-size:12px">登录</button></div>
-  <div class="sub">第 4 回合 · 更新于 2026-11-27 22:28</div>
+  <div class="sub">第 4 回合 · 更新于 2026-11-27 22:31</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -446,7 +446,7 @@ try{(function(){
     if(c==='__GM__'){
       try{
         const txt=new TextDecoder('utf-8').decode(rc4(new TextEncoder().encode(p),b64(GMENC)));
-        if(txt.startsWith('GM|')){ window.setID('推演'); return true; }
+        if(txt.startsWith('GM|')){ window.__gmPass=p; window.setID('推演'); return true; }
       }catch(e){}
       return false;
     }
@@ -511,10 +511,11 @@ function tryAutoG(){
   const id=window.getID&&window.getID();
   if(!id)return;
   if(id==='推演'){
-    document.getElementById('gmp').value='';
     const gp=document.getElementById('gp'); if(gp)gp.style.display='none';
     document.getElementById('gb').style.display='none';
-    document.getElementById('gout').innerHTML='<div class="ok" style="font-size:13px">已登录推演 · 用下方 GM 卡片输入密码查看全服驻军</div>';
+    const gmp=document.getElementById('gmp');
+    if(window.__gmPass){ gmp.value=window.__gmPass; document.getElementById('gmb').click(); }
+    else document.getElementById('gout').innerHTML='<div class="dim" style="font-size:12.5px">推演已登录，请在下方 GM 卡片输入推演密码</div>';
     return;
   }
   gsel.value=id;
@@ -847,14 +848,20 @@ setTimeout(tryAutoG,60);
   function renderMine(){
     if(!mine.length){armyBox.innerHTML='<div class="dim" style="font-size:12.5px">没有可改编的部队</div>';return;}
     armyBox.innerHTML=mine.map((r,i)=>`<div style="display:flex;align-items:center;gap:6px;padding:6px 0;border-bottom:1px solid #1b2436;font-size:13px">
-      <span style="flex:1">${r.unit} × ${r.qty}<span class="dim" style="font-size:11px"> · ${r.corps}</span></span>
-      <span style="display:flex;gap:4px">${['前','中','后'].map(l=>`<button data-m="${i}" data-l="${l}" style="background:${r.line===l?'#c9a75f':'#141d2c'};color:${r.line===l?'#1a1408':'#7d8ba1'};border:1px solid #2a3a52;border-radius:6px;padding:2px 7px;font-size:11.5px">${l}</button>`).join('')}</span>
+      <span style="flex:1">${r.unit}<span class="dim" style="font-size:11px"> · ${r.corps}</span></span>
+      <input data-q="${i}" type="number" min="0" value="${r.qty}" style="width:54px;background:#131c2c;border:1px solid #24334a;color:#e9e9e2;border-radius:7px;padding:4px 6px;font-size:12.5px">
+      <span style="display:flex;gap:4px">${['前','中','后'].map(l=>`<button data-m="${i}" data-l="${l}" style="background:${r.line===l?'#c9a75f':'#141d2c'};color:${r.line===l?'#1a1408':'#7d8ba1'};border:1px solid #2a3a52;border-radius:6px;padding:3px 7px;font-size:11.5px">${l}</button>`).join('')}</span>
+      <button data-x="${i}" style="background:none;border:0;color:#ff8f7a;font-size:14px;padding:0 2px">×</button>
     </div>`).join('')+`<div id="mtot" style="font-size:12.5px;color:#9fb0c8;margin-top:8px"></div>
       <button id="mcp" style="width:100%;margin-top:8px;background:#141d2c;border:1px solid #2a3a52;color:#e4c98a;border-radius:9px;padding:9px">复制编制回执</button>`;
+    armyBox.querySelectorAll('input[data-q]').forEach(el=>el.onchange=()=>{
+      mine[+el.dataset.q].qty=Math.max(0,+el.value||0); renderMine();});
+    armyBox.querySelectorAll('button[data-x]').forEach(b=>b.onclick=()=>{
+      mine.splice(+b.dataset.x,1); renderMine();});
     armyBox.querySelectorAll('button[data-m]').forEach(b=>b.onclick=()=>{
       mine[+b.dataset.m].line=b.dataset.l; renderMine();});
     const g=['前','中','后'].map(l=>{
-      const rs=mine.filter(r=>r.line===l);
+      const rs=mine.filter(r=>r.line===l&&r.qty>0);
       const t=rs.reduce((s,r)=>s+r.qty,0);
       return `${l}军 ${t}`;
     }).join(' · ');
