@@ -70,7 +70,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">欧 陆 风 云 · 数 据 台</h1><button id="idbtn" style="background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:9px;padding:6px 10px;font-size:12px">登录</button></div>
-  <div class="sub">第 4 回合 · 更新于 2026-11-27 21:45</div>
+  <div class="sub">第 4 回合 · 更新于 2026-11-27 21:49</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -395,8 +395,8 @@ try{(function(){
   window.login=(c,p)=>{ const list=verify(c,p);
     if(list){ localStorage.setItem('eu4_g_'+c,JSON.stringify(list)); window.setID(c); }
     return !!list; };
-  function open(){ modal.classList.remove('hide'); err.textContent=''; pw.value=''; if(id) sel.value=id; }
-  function close(){ modal.classList.add('hide'); }
+  function open(){ modal.classList.remove('hide'); modal.style.display='flex'; err.textContent=''; pw.value=''; if(id) sel.value=id; }
+  function close(){ modal.classList.add('hide'); modal.style.display='none'; }
   btn.onclick=open;
   document.getElementById('idskip').onclick=close;
   pw.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); document.getElementById('idok').click(); } });
