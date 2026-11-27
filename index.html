@@ -70,7 +70,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">欧 陆 风 云 · 数 据 台</h1><button id="idbtn" style="background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:9px;padding:6px 10px;font-size:12px">登录</button></div>
-  <div class="sub">第 4 回合 · 更新于 2026-11-27 23:22</div>
+  <div class="sub">第 4 回合 · 更新于 2026-11-27 23:23</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -276,6 +276,16 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
           <option>固守</option><option>突击</option><option>齐射</option><option>冲锋</option><option>炮击</option><option>散兵线</option><option>楔形阵</option><option>佯攻</option><option>迂回</option></select>
       </div>
     </div>
+    <div style="margin-top:10px;display:flex;gap:10px">
+      <div style="flex:1">
+        <div style="font-size:12px;color:#e4c98a;margin-bottom:4px">攻方战术卡（最多2）</div>
+        <div id="bcA" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+      </div>
+      <div style="flex:1">
+        <div style="font-size:12px;color:#9fb0c8;margin-bottom:4px">守方战术卡（最多2）</div>
+        <div id="bcB" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+      </div>
+    </div>
     <div id="bout" style="margin-top:10px;font-size:13px;line-height:1.9;color:#cfd6e2"></div>
   </div>
 </section>
@@ -413,28 +423,66 @@ function calc(){
 (function(){
   const A=document.getElementById('ba'),AF=document.getElementById('baf'),C=document.getElementById('bcmd');
   const D=document.getElementById('bd'),DF=document.getElementById('bdf'),C2=document.getElementById('bcmd2');
-  const out=document.getElementById('bout');
+  const out=document.getElementById('bout'),bcA=document.getElementById('bcA'),bcB=document.getElementById('bcB');
   const K={'突击':[1.3,0.7],'固守':[0.6,1.4],'齐射':[1.1,1.0],'冲锋':[1.5,0.6],'炮击':[1.2,0.8],
            '散兵线':[0.9,1.1],'楔形阵':[1.35,0.85],'佯攻':[0.7,1.2],'迂回':[0,0.8]};
   const BEAT={'突击':'齐射','齐射':'固守','固守':'突击','冲锋':'突击','炮击':'固守','散兵线':'冲锋','楔形阵':'散兵线'};
+  const CARDS=[['夜袭',20],['火攻',25],['假遁',15],['铁壁',30],['斥候',15],['鼓舞',20],['破阵',25],['休整',10]];
+  const selA=new Set(), selB=new Set();
+  function chips(box,set){
+    box.innerHTML=CARDS.map(([n,c])=>`<button data-c="${n}" style="background:#141d2c;border:1px solid #24334a;color:#7d8ba1;border-radius:7px;padding:3px 7px;font-size:11.5px">${n}</button>`).join('');
+    box.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+      const n=b.dataset.c;
+      if(set.has(n)){set.delete(n);} else { if(set.size>=2)return; set.add(n);}
+      paint(box,set); calc();
+    });
+    paint(box,set);
+  }
+  function paint(box,set){
+    box.querySelectorAll('button').forEach(b=>{
+      const on=set.has(b.dataset.c);
+      b.style.background=on?'#c9a75f':'#141d2c'; b.style.color=on?'#1a1408':'#7d8ba1';
+      b.style.fontWeight=on?'600':'400';
+    });
+  }
   function calc(){
     const a=+A.value||0,af=+AF.value||0,d=+D.value||0,df=+DF.value||0;
     const c1=C.value,c2=C2.value;
     const [a1,a2]=K[c1]||[1,1], [d1,d2]=K[c2]||[1,1];
     let m1=1,m2=1;
-    if(BEAT[c1]===c2) m1=1.25;
-    if(BEAT[c2]===c1) m2=1.25;
-    if(BEAT[c1]===c2&&BEAT[c2]===c1){m1=1;m2=1;}
-    const atk=a*af*a1*m1, defD=d*df*d2*m2;
-    const dmgA=Math.max(2, atk-defD*0.4);
-    const atkD=d*df*d1*m2, defA=a*af*a2*m1;
-    const dmgD=Math.max(2, atkD-defA*0.4);
-    const casA=Math.round(dmgD/7), casD=Math.round(dmgA/7);
-    out.innerHTML=`<div>攻方 ${c1}：总攻 <b>${atk.toFixed(1)}</b> → 对守方伤害 <b>${dmgA.toFixed(1)}</b> → 守方死 <b style="color:#ff8f7a">${casD}</b></div>
-      <div>守方 ${c2}：总攻 <b>${atkD.toFixed(1)}</b> → 对攻方伤害 <b>${dmgD.toFixed(1)}</b> → 攻方死 <b style="color:#ff8f7a">${casA}</b></div>
-      <div class="dim" style="font-size:12px">克制：${BEAT[c1]===c2?c1+' 克 '+c2+'（×1.25）':(BEAT[c2]===c1?c2+' 克 '+c1+'（×1.25）':'无')}</div>
-      <div class="dim" style="font-size:12px">士气：攻方伤亡 ${(casA/Math.max(1,a)*100).toFixed(0)}% · 守方 ${(casD/Math.max(1,d)*100).toFixed(0)}%（≥15% 士气 −1）</div>`;
+    const beat1=BEAT[c1]===c2, beat2=BEAT[c2]===c1;
+    if(beat1) m1=1.25;
+    if(beat2) m2=1.25;
+    if(selA.has('破阵')) m2=1;      // 攻方无视对方克制
+    if(selB.has('破阵')) m1=1;
+    let defMulA=1, defMulB=1;
+    if(selA.has('铁壁')) defMulA*=1.3;
+    if(selB.has('铁壁')) defMulB*=1.3;
+    if(selA.has('夜袭')) { m1*=1.2; defMulB*=0.8; }
+    if(selB.has('夜袭')) { m2*=1.2; defMulA*=0.8; }
+    const atk=a*af*a1*m1, defD=d*df*d2*m2*defMulB;
+    let dmgA=Math.max(2, atk-defD*0.4);
+    const atkD=d*df*d1*m2, defA=a*af*a2*m1*defMulA;
+    let dmgD=Math.max(2, atkD-defA*0.4);
+    if(selA.has('假遁')) dmgA=0;
+    if(selB.has('假遁')) dmgD=0;
+    let casA=Math.round(dmgD/7), casD=Math.round(dmgA/7);
+    if(selA.has('休整')) casA=Math.round(casA*0.9);
+    if(selB.has('休整')) casD=Math.round(casD*0.9);
+    const extra=[];
+    if(selA.has('火攻')) extra.push('守方士气 −1（2 回合）');
+    if(selB.has('火攻')) extra.push('攻方士气 −1（2 回合）');
+    if(selA.has('鼓舞')) extra.push('攻方士气 +2');
+    if(selB.has('鼓舞')) extra.push('守方士气 +2');
+    if(selA.has('假遁')) extra.push('攻方本回合不出伤，下回合攻 ×1.5');
+    if(selB.has('假遁')) extra.push('守方本回合不出伤，下回合攻 ×1.5');
+    out.innerHTML=`<div>攻方 ${c1}${[...selA].map(x=>' · '+x).join('')}：总攻 <b>${atk.toFixed(1)}</b> → 守方死 <b style="color:#ff8f7a">${casD}</b></div>
+      <div>守方 ${c2}${[...selB].map(x=>' · '+x).join('')}：总攻 <b>${atkD.toFixed(1)}</b> → 攻方死 <b style="color:#ff8f7a">${casA}</b></div>
+      <div class="dim" style="font-size:12px">克制：${(beat1&&!selA.has('破阵'))?c1+' 克 '+c2+'（×1.25）':((beat2&&!selB.has('破阵'))?c2+' 克 '+c1+'（×1.25）':'无')}</div>
+      <div class="dim" style="font-size:12px">士气：攻方伤亡 ${(casA/Math.max(1,a)*100).toFixed(0)}% · 守方 ${(casD/Math.max(1,d)*100).toFixed(0)}%（≥15% 士气 −1）</div>
+      ${extra.length?`<div class="dim" style="font-size:12px">战术：${extra.join('；')}</div>`:''}`;
   }
+  chips(bcA,selA); chips(bcB,selB);
   [A,AF,D,DF].forEach(e=>e.oninput=calc); [C,C2].forEach(e=>e.onchange=calc); calc();
 })();
 
