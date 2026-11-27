@@ -70,7 +70,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">欧 陆 风 云 · 数 据 台</h1><button id="idbtn" style="background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:9px;padding:6px 10px;font-size:12px">登录</button></div>
-  <div class="sub">第 4 回合 · 更新于 2026-11-27 21:56</div>
+  <div class="sub">第 4 回合 · 更新于 2026-11-27 22:01</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -802,25 +802,36 @@ setTimeout(tryAutoG,60);
   btn.onclick=()=>{const i=+sel.value,q=Math.max(1,+num.value||1);
     const ex=rows.find(r=>r.i===i&&r.line===cur); if(ex)ex.q+=q; else rows.push({i,q,line:cur}); render();};
   army.oninput=render;
+  const TYPES=[["建造",1],["升级",1],["开垦",1],["科技",1],["行政",1],["行军",1],["攻城",1],["围城",1],["停战",1],
+               ["招兵",0],["解散",0],["外交",0],["借款",0],["条约",0],["贸易",0],["事件",0],["其他",0]];
   let acts=[{t:'建造',d:'',c:0},{t:'建造',d:'',c:0},{t:'建造',d:'',c:0}];
   function renderActs(){
     ACTS.innerHTML=acts.map((a,i)=>`<div style="display:flex;gap:6px;margin-bottom:8px;align-items:center">
-      <select data-i="${i}" data-f="t" style="width:88px;background:#131c2c;border:1px solid #24334a;color:#e9e9e2;border-radius:8px;padding:8px;font-size:13px">
-        ${['建造','升级','开垦','招兵','行军','攻城','外交','其他'].map(x=>`<option ${x===a.t?'selected':''}>${x}</option>`).join('')}</select>
+      <select data-i="${i}" data-f="t" style="width:84px;background:#131c2c;border:1px solid #24334a;color:#e9e9e2;border-radius:8px;padding:8px;font-size:13px">
+        ${TYPES.map(([x,ap])=>`<option value="${x}" ${x===a.t?'selected':''}>${x}${ap?'':'∘'}</option>`).join('')}</select>
       <input data-i="${i}" data-f="d" value="${a.d}" placeholder="内容" style="flex:1;background:#131c2c;border:1px solid #24334a;color:#e9e9e2;border-radius:8px;padding:8px;font-size:13px">
-      <input data-i="${i}" data-f="c" type="number" value="${a.c}" style="width:68px;background:#131c2c;border:1px solid #24334a;color:#e9e9e2;border-radius:8px;padding:8px;font-size:13px">
-    </div>`).join('');
+      <input data-i="${i}" data-f="c" type="number" value="${a.c}" style="width:64px;background:#131c2c;border:1px solid #24334a;color:#e9e9e2;border-radius:8px;padding:8px;font-size:13px">
+      <button data-del="${i}" style="background:none;border:0;color:#ff8f7a;font-size:15px;padding:0 4px">×</button>
+    </div>`).join('')+`<button id="aadd" style="width:100%;background:#141d2c;border:1px dashed #2a3a52;color:#9fb0c8;border-radius:9px;padding:8px;font-size:13px">＋ 添加行动</button>`;
     ACTS.querySelectorAll('select,input').forEach(el=>{
-      const h=e=>{const i=+el.dataset.i,f=el.dataset.f;
-        acts[i][f]=f==='c'?(+e.target.value||0):e.target.value; renderActs();};
-      el.onchange=h; if(el.dataset.f==='d') el.oninput=()=>{acts[+el.dataset.i].d=el.value;};
+      const i=+el.dataset.i,f=el.dataset.f;
+      const h=e=>{ acts[i][f]= f==='c'?(+e.target.value||0):e.target.value; renderActs(); };
+      el.onchange=h; if(f==='d') el.oninput=()=>{acts[i].d=el.value;};
     });
-    const sum=acts.reduce((s,a)=>s+(+a.c||0),0), ap=acts.filter(a=>a.d.trim()).length;
-    ATOT.innerHTML=`<div style="font-size:13px;color:#cfd6e2">行动点 <b style="color:${ap>3?'#ff8f7a':'#7fd6a8'}">${ap}/3</b> · 合计花费 <b style="color:#e4c98a">${sum}</b> 金</div>
+    ACTS.querySelectorAll('button[data-del]').forEach(b=>b.onclick=()=>{
+      if(acts.length<=1)return; acts.splice(+b.dataset.del,1); renderActs();});
+    document.getElementById('aadd').onclick=()=>{acts.push({t:'其他',d:'',c:0});renderActs();};
+    const apOf=t=>(TYPES.find(x=>x[0]===t)||[t,1])[1];
+    const filled=acts.filter(a=>a.d.trim());
+    const ap=filled.reduce((s,a)=>s+apOf(a.t),0), zero=filled.filter(a=>!apOf(a.t)).length;
+    const sum=acts.reduce((s,a)=>s+(+a.c||0),0);
+    ATOT.innerHTML=`<div style="font-size:13px;color:#cfd6e2;line-height:1.8">
+      行动点 <b style="color:${ap>3?'#ff8f7a':(ap===3?'#c9a75f':'#7fd6a8')}">${ap}/3</b>
+      · 免 AP 动作 <b>${zero}</b> 个 · 合计花费 <b style="color:#e4c98a">${sum}</b> 金</div>
       <button id="acp" style="width:100%;margin-top:8px;background:#141d2c;border:1px solid #2a3a52;color:#e4c98a;border-radius:9px;padding:9px">复制行动回执</button>`;
     document.getElementById('acp').onclick=()=>{
-      const txt=`【回合行动】\n国：\n`+acts.map((a,i)=>a.d?`行动${i+1}：${a.t} · ${a.d}（${a.c} 金）`:'').filter(Boolean).join('\n')+
-        `\n合计：${sum} 金 · 用 ${ap} AP`;
+      const txt=`【回合行动】\n国：\n`+filled.map((a,i)=>`行动${i+1}：${a.t} · ${a.d}（${a.c} 金${apOf(a.t)?'':'，0AP'}）`).join('\n')+
+        `\n合计：${sum} 金 · ${ap} AP · ${zero} 个免 AP`;
       copy(txt,document.getElementById('acp'));
     };
   }
