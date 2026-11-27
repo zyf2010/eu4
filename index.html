@@ -69,8 +69,8 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 </head>
 <body>
 <header>
-  <h1>欧 陆 风 云 · 数 据 台</h1>
-  <div class="sub">第 4 回合 · 更新于 2026-11-27 21:34</div>
+  <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">欧 陆 风 云 · 数 据 台</h1><button id="idbtn" style="background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:9px;padding:6px 10px;font-size:12px">登录</button></div>
+  <div class="sub">第 4 回合 · 更新于 2026-11-27 21:37</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -85,6 +85,17 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
     <button data-t="h">史书</button>
   </nav>
 </header>
+<div id="idmodal" class="hide" style="position:fixed;inset:0;z-index:60;background:rgba(4,8,14,.82);display:flex;align-items:center;justify-content:center;padding:20px">
+  <div style="width:100%;max-width:420px;background:#0f1725;border:1px solid #24334a;border-radius:16px;padding:18px">
+    <div style="font-size:17px;color:#f0e6cf;margin-bottom:2px">登录你的国家</div>
+    <div class="dim" style="font-size:12px;margin-bottom:12px">输入一次，本站的驻军与事件页都不再重复要求</div>
+    <select id="idc" style="width:100%;background:#131c2c;border:1px solid #24334a;color:#e9e9e2;border-radius:9px;padding:10px;font-size:14px"></select>
+    <input type="password" id="idp" placeholder="访问密码" style="width:100%;margin-top:10px;background:#131c2c;border:1px solid #24334a;color:#e9e9e2;border-radius:9px;padding:10px 12px;font-size:15px">
+    <div id="iderr" class="no" style="font-size:12px;margin-top:8px"></div>
+    <button id="idok" style="width:100%;margin-top:12px;background:#c9a75f;color:#1a1408;border:0;border-radius:10px;padding:12px;font-size:15px;font-weight:600">登录</button>
+    <button id="idskip" style="width:100%;margin-top:8px;background:none;border:0;color:#7d8ba1;font-size:13px;padding:6px">暂不登录</button>
+  </div>
+</div>
 <div id="modal" class="hide" style="position:fixed;inset:0;z-index:50;background:rgba(4,8,14,.78);display:flex;align-items:flex-end">
   <div id="sheet" style="width:100%;max-height:88vh;overflow:auto;background:#0f1725;border-top:1px solid #24334a;border-radius:18px 18px 0 0;padding:16px 16px 28px"></div>
 </div>
@@ -359,6 +370,50 @@ function calc(){
 ['ai','afi','ar','afr','as','engsel','en','dn','df','lv','w','hg'].forEach(id=>{const el=$('#'+id);el.oninput=calc;el.onchange=calc;});
 
 
+(function(){
+  const KEY='eu4_id_v1';
+  const modal=document.getElementById('idmodal'), sel=document.getElementById('idc'),
+        pw=document.getElementById('idp'), err=document.getElementById('iderr'), btn=document.getElementById('idbtn');
+  sel.innerHTML=Object.keys(ENC).sort().map(k=>`<option>${k}</option>`).join('');
+  let id=null;
+  try{ id=JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){}
+  window.getID=()=>id;
+  function paint(){
+    if(id){ btn.textContent='👤 '+id; btn.style.color='#7fd6a8'; btn.style.borderColor='#2d5a3c'; }
+    else { btn.textContent='登录'; btn.style.color='#9fb0c8'; btn.style.borderColor='#2a3a52'; }
+  }
+  function verify(c,p){
+    try{
+      const txt=new TextDecoder('utf-8').decode(rc4(new TextEncoder().encode(p),b64(ENC[c])));
+      if(!txt.startsWith('G1|')) return null;
+      return JSON.parse(txt.slice(3));
+    }catch(e){return null;}
+  }
+  window.getGarrison=(c)=>{ try{ return JSON.parse(localStorage.getItem('eu4_g_'+c)||'null'); }catch(e){ return null; } };
+  window.setID=(c)=>{ id=c; localStorage.setItem(KEY,JSON.stringify(c)); paint();
+    window.dispatchEvent(new Event('eu4id')); };
+  window.login=(c,p)=>{ const list=verify(c,p);
+    if(list){ localStorage.setItem('eu4_g_'+c,JSON.stringify(list)); window.setID(c); }
+    return !!list; };
+  function open(){ modal.classList.remove('hide'); err.textContent=''; pw.value=''; if(id) sel.value=id; }
+  function close(){ modal.classList.add('hide'); }
+  btn.onclick=open;
+  document.getElementById('idskip').onclick=close;
+  document.getElementById('idok').onclick=()=>{
+    const c=sel.value,p=pw.value.trim();
+    if(!p){err.textContent='请输入密码';return;}
+    if(window.login(c,p)){ close(); }
+    else err.textContent='密码不对，或该国暂无数据';
+  };
+  modal.onclick=e=>{ if(e.target===modal) close(); };
+  paint();
+  // 首次访问且未登录：静默提示（3 秒后自动弹一次）
+  if(!id && !sessionStorage.getItem('eu4_asked')){
+    sessionStorage.setItem('eu4_asked','1'); setTimeout(open,1200);
+  }
+})();
+
+
 function rc4(key,data){
   const S=new Uint8Array(256); for(let i=0;i<256;i++)S[i]=i;
   let j=0;
@@ -373,26 +428,47 @@ function rc4(key,data){
 function b64(s){const bin=atob(s);const a=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)a[i]=bin.charCodeAt(i);return a;}
 const gsel=document.getElementById('gc');
 gsel.innerHTML=Object.keys(ENC).sort().map(k=>`<option>${k}</option>`).join('');
+function decryptG(k,p){
+  try{
+    const txt=new TextDecoder('utf-8').decode(rc4(new TextEncoder().encode(p),b64(ENC[k])));
+    if(!txt.startsWith('G1|')) throw 0;
+    return JSON.parse(txt.slice(3));
+  }catch(e){return null;}
+}
+function renderG(list){
+  document.getElementById('gout').innerHTML=list.map(c=>`<div class="card" style="margin:0 0 10px">
+    <div class="row"><div class="name">${c.n}</div><div class="dim" style="font-size:12px">${c.loc}</div></div>
+    <div class="dim" style="font-size:13px;margin-top:4px">${c.u}</div>
+    <div class="grid" style="margin-top:8px">
+      <div><div class="k">兵力</div><div class="v">${c.t}</div></div>
+      <div><div class="k">总攻</div><div class="v">${c.a}</div></div>
+      <div><div class="k">总防</div><div class="v">${c.d}</div></div>
+      <div><div class="k">远征费</div><div class="v">${c.fee||'—'}</div></div>
+    </div></div>`).join('');
+}
+function tryAutoG(){
+  const id=window.getID&&window.getID();
+  if(!id)return;
+  gsel.value=id;
+  const gp=document.getElementById('gp'); if(gp)gp.value='(已登录)';
+  const list=window.getGarrison?window.getGarrison(id):null;
+  if(list)renderG(list);
+}
 document.getElementById('gb').onclick=()=>{
   const k=gsel.value, p=document.getElementById('gp').value.trim();
   const out=document.getElementById('gout');
-  if(!p){out.innerHTML='<div class="no">请输入密码</div>';return;}
-  try{
-    const key=new TextEncoder().encode(p);
-    const txt=new TextDecoder('utf-8').decode(rc4(key,b64(ENC[k])));
-    if(!txt.startsWith('G1|')) throw 0;
-    const list=JSON.parse(txt.slice(3));
-    out.innerHTML=list.map(c=>`<div class="card" style="margin:0 0 10px">
-      <div class="row"><div class="name">${c.n}</div><div class="dim" style="font-size:12px">${c.loc}</div></div>
-      <div class="dim" style="font-size:13px;margin-top:4px">${c.u}</div>
-      <div class="grid" style="margin-top:8px">
-        <div><div class="k">兵力</div><div class="v">${c.t}</div></div>
-        <div><div class="k">总攻</div><div class="v">${c.a}</div></div>
-        <div><div class="k">总防</div><div class="v">${c.d}</div></div>
-        <div><div class="k">远征费</div><div class="v">${c.fee||'—'}</div></div>
-      </div></div>`).join('');
-  }catch(e){out.innerHTML='<div class="no">密码错误，或该国暂无驻军记录</div>';}
+  const list=decryptG(k,p);
+  if(!list){
+    if(window.login){window.login(k,p);}
+    const again=window.getGarrison?window.getGarrison(k):null;
+    if(again){window.setID(k);renderG(again);return;}
+    out.innerHTML='<div class="no">密码错误，或该国暂无驻军记录</div>';return;
+  }
+  window.setID&&window.setID(k);
+  renderG(list);
 };
+window.addEventListener('eu4id',()=>{tryAutoG();});
+setTimeout(tryAutoG,60);
 
 
 
