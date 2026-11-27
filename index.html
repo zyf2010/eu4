@@ -70,7 +70,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">欧 陆 风 云 · 数 据 台</h1><button id="idbtn" style="background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:9px;padding:6px 10px;font-size:12px">登录</button></div>
-  <div class="sub">第 4 回合 · 更新于 2026-11-27 21:44</div>
+  <div class="sub">第 4 回合 · 更新于 2026-11-27 21:45</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -370,7 +370,7 @@ function calc(){
 ['ai','afi','ar','afr','as','engsel','en','dn','df','lv','w','hg'].forEach(id=>{const el=$('#'+id);el.oninput=calc;el.onchange=calc;});
 
 
-(function(){
+try{(function(){
   const KEY='eu4_id_v1';
   const modal=document.getElementById('idmodal'), sel=document.getElementById('idc'),
         pw=document.getElementById('idp'), err=document.getElementById('iderr'), btn=document.getElementById('idbtn');
@@ -413,9 +413,10 @@ function calc(){
   if(!id && !sessionStorage.getItem('eu4_asked')){
     sessionStorage.setItem('eu4_asked','1'); setTimeout(open,1200);
   }
-})();
+})();}catch(e){console.error('IDJS',e);}
 
 
+try{
 function rc4(key,data){
   const S=new Uint8Array(256); for(let i=0;i<256;i++)S[i]=i;
   let j=0;
@@ -471,6 +472,8 @@ document.getElementById('gb').onclick=()=>{
 };
 window.addEventListener('eu4id',()=>{tryAutoG();});
 setTimeout(tryAutoG,60);
+
+}catch(e){console.error('GJS',e);}
 
 
 
