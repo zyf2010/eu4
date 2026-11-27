@@ -70,7 +70,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">欧 陆 风 云 · 数 据 台</h1><button id="idbtn" style="background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:9px;padding:6px 10px;font-size:12px">登录</button></div>
-  <div class="sub">第 4 回合 · 更新于 2026-11-27 22:26</div>
+  <div class="sub">第 4 回合 · 更新于 2026-11-27 22:28</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -423,7 +423,7 @@ try{(function(){
   const KEY='eu4_id_v1';
   const modal=document.getElementById('idmodal'), sel=document.getElementById('idc'),
         pw=document.getElementById('idp'), err=document.getElementById('iderr'), btn=document.getElementById('idbtn');
-  sel.innerHTML=Object.keys(ENC).sort().map(k=>`<option>${k}</option>`).join('');
+  sel.innerHTML='<option value="__GM__">推演 · GM（全服）</option>'+Object.keys(ENC).sort().map(k=>`<option>${k}</option>`).join('');
   let id=null;
   try{ id=JSON.parse(localStorage.getItem(KEY)||'null'); }catch(e){}
   window.getID=()=>id;
@@ -441,7 +441,16 @@ try{(function(){
   window.getGarrison=(c)=>{ try{ return JSON.parse(localStorage.getItem('eu4_g_'+c)||'null'); }catch(e){ return null; } };
   window.setID=(c)=>{ id=c; localStorage.setItem(KEY,JSON.stringify(c)); paint();
     window.dispatchEvent(new Event('eu4id')); };
-  window.login=(c,p)=>{ const list=verify(c,p);
+  window.isGM=()=>id==='推演';
+  window.login=(c,p)=>{
+    if(c==='__GM__'){
+      try{
+        const txt=new TextDecoder('utf-8').decode(rc4(new TextEncoder().encode(p),b64(GMENC)));
+        if(txt.startsWith('GM|')){ window.setID('推演'); return true; }
+      }catch(e){}
+      return false;
+    }
+    const list=verify(c,p);
     if(list){ localStorage.setItem('eu4_g_'+c,JSON.stringify(list)); window.setID(c); }
     return !!list; };
   function open(){ modal.classList.remove('hide'); modal.style.display='flex'; err.textContent=''; pw.value=''; if(id) sel.value=id; }
@@ -454,7 +463,7 @@ try{(function(){
     const c=sel.value,p=pw.value.trim();
     if(!p){err.textContent='请输入密码';return;}
     if(window.login(c,p)){ close(); }
-    else err.textContent='「'+c+'」的密码不对，请确认国家是否选对';
+    else err.textContent=(c==='__GM__')?'推演密码不对':'「'+c+'」的密码不对，请确认国家是否选对';
   };
   modal.onclick=e=>{ if(e.target===modal) close(); };
   paint();
@@ -501,6 +510,13 @@ function renderG(list){
 function tryAutoG(){
   const id=window.getID&&window.getID();
   if(!id)return;
+  if(id==='推演'){
+    document.getElementById('gmp').value='';
+    const gp=document.getElementById('gp'); if(gp)gp.style.display='none';
+    document.getElementById('gb').style.display='none';
+    document.getElementById('gout').innerHTML='<div class="ok" style="font-size:13px">已登录推演 · 用下方 GM 卡片输入密码查看全服驻军</div>';
+    return;
+  }
   gsel.value=id;
   const gp=document.getElementById('gp'); if(gp)gp.value='(已登录)';
   const list=window.getGarrison?window.getGarrison(id):null;
@@ -810,11 +826,20 @@ setTimeout(tryAutoG,60);
 
   /* ---------- 编制（改编现有，仅本国可见） ---------- */
   let mine=[];   // {corps, unit, qty, line}
+  let gmPick=null;
   function loadMine(){
     const id=window.getID&&window.getID();
     if(!id){ stat.textContent='需先登录，编制只对本国可见'; armyBox.innerHTML='<div class="dim" style="font-size:12.5px">点右上角「登录」后显示你的集团军</div>'; return; }
-    stat.textContent=id+' · 编制仅本国可见';
-    const corps=ARMIES[id]||[];
+    let who=id;
+    if(id==='推演'){
+      who=gmPick||Object.keys(ARMIES).sort()[0];
+      stat.innerHTML='推演模式 · 查看 <select id="gmc" style="background:#131c2c;border:1px solid #24334a;color:#e4c98a;border-radius:7px;padding:3px 6px;font-size:12px">'+
+        Object.keys(ARMIES).sort().map(k=>`<option ${k===who?'selected':''}>${k}</option>`).join('')+'</select> 的编制';
+      setTimeout(()=>{const el=document.getElementById('gmc'); if(el) el.onchange=()=>{gmPick=el.value;loadMine();};},0);
+    } else {
+      stat.textContent=id+' · 编制仅本国可见';
+    }
+    const corps=ARMIES[who]||[];
     mine=[];
     corps.forEach(c=>c.lines.forEach(l=>mine.push({corps:c.name,unit:l.n,qty:l.q,line:l.line})));
     renderMine();
