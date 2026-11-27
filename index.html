@@ -70,7 +70,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <h1>欧 陆 风 云 · 数 据 台</h1>
-  <div class="sub">第 4 回合 · 更新于 2026-11-27 21:21</div>
+  <div class="sub">第 4 回合 · 更新于 2026-11-27 21:23</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -641,31 +641,58 @@ document.getElementById('gb').onclick=()=>{
         tot=document.getElementById('utot'), army=document.getElementById('uarmy');
   const ACTS=document.getElementById('aacts'), ATOT=document.getElementById('atot');
   sel.innerHTML=UNITS.map((u,i)=>`<option value="${i}">${u.n}（${u.l} · ${u.k}）</option>`).join('');
-  let rows=[];
+  let rows=[], cur='前';
+  // 前中后切换
+  const bar=document.createElement('div');
+  bar.style.cssText='display:flex;gap:6px;margin:10px 0';
+  bar.innerHTML=['前','中','后'].map(l=>`<button data-l="${l}" style="flex:1;background:#131c2c;border:1px solid #24334a;color:#9fb0c8;border-radius:9px;padding:8px;font-size:13px">${l}军</button>`).join('');
+  document.getElementById('ulist').before(bar);
+  function paintBar(){bar.querySelectorAll('button').forEach(b=>{
+    const on=b.dataset.l===cur; b.style.background=on?'#c9a75f':'#131c2c';
+    b.style.color=on?'#1a1408':'#9fb0c8'; b.style.fontWeight=on?'600':'400';});}
+  bar.querySelectorAll('button').forEach(b=>b.onclick=()=>{cur=b.dataset.l;paintBar();}); paintBar();
+  function sumOf(line){
+    const rs=rows.filter(r=>r.line===line);
+    let t=0,a=0,d=0,c=0,m=0;
+    rs.forEach(r=>{const u=UNITS[r.i];t+=r.q;a+=u.a*r.q;d+=u.d*r.q;c+=u.c*r.q;m+=u.m*r.q;});
+    return {rows:rs,t,a,d,c,m};
+  }
   function render(){
-    list.innerHTML=rows.length?rows.map((r,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #1b2436;font-size:13px">
-      <span>${UNITS[r.i].n} × ${r.q}</span>
-      <span style="color:#9fb0c8">招募 ${UNITS[r.i].c*r.q} 金
-        <button data-d="${i}" style="background:none;border:0;color:#ff8f7a;margin-left:8px">删</button></span></div>`).join('')
-      :'<div class="dim" style="font-size:12px">还没加兵种</div>';
+    const groups=['前','中','后'];
+    list.innerHTML=groups.map(g=>{
+      const S=sumOf(g);
+      const body=S.rows.length?S.rows.map(r=>{
+        const idx=rows.indexOf(r); const u=UNITS[r.i];
+        return `<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #1b2436;font-size:13px">
+          <span>${u.n} × ${r.q}</span>
+          <span style="color:#9fb0c8">${u.c*r.q} 金
+            <button data-d="${idx}" style="background:none;border:0;color:#ff8f7a;margin-left:6px">删</button></span></div>`;
+      }).join(''):'<div class="dim" style="font-size:12px;padding:4px 0">空</div>';
+      return `<div style="margin-top:10px">
+        <div style="font-size:12px;color:#e4c98a;letter-spacing:1px">${g}军</div>${body}
+        ${S.rows.length?`<div style="font-size:11.5px;color:#7d8ba1;padding-top:3px">${S.t} 兵 · 攻 ${S.a} · 防 ${S.d}</div>`:''}</div>`;
+    }).join('');
     list.querySelectorAll('button[data-d]').forEach(b=>b.onclick=()=>{rows.splice(+b.dataset.d,1);render();});
-    let t=0,atk=0,df=0,cost=0,maint=0;
-    rows.forEach(r=>{const u=UNITS[r.i];t+=r.q;atk+=u.a*r.q;df+=u.d*r.q;cost+=u.c*r.q;maint+=u.m*r.q;});
-    tot.innerHTML=`<div style="font-size:13px;color:#cfd6e2;line-height:1.9">
-      兵力 <b style="color:#e4c98a">${t}</b> · 攻 <b>${atk}</b> · 防 <b>${df}</b><br>
-      招募 <b style="color:#e4c98a">${cost}</b> 金 · 每回合维护 <b>${maint.toFixed(1)}</b> 金</div>
-      ${t?`<button id="ucp" style="width:100%;margin-top:8px;background:#141d2c;border:1px solid #2a3a52;color:#e4c98a;border-radius:9px;padding:9px">复制编制回执</button>`:''}`;
+    let T=0,A=0,D=0,C=0,M=0;
+    ['前','中','后'].forEach(g=>{const S=sumOf(g);T+=S.t;A+=S.a;D+=S.d;C+=S.c;M+=S.m;});
+    tot.innerHTML=`<div style="font-size:13px;color:#cfd6e2;line-height:1.9;margin-top:10px">
+      全军 <b style="color:#e4c98a">${T}</b> 兵 · 攻 <b>${A}</b> · 防 <b>${D}</b><br>
+      招募 <b style="color:#e4c98a">${C}</b> 金 · 每回合维护 <b>${M.toFixed(1)}</b> 金</div>
+      ${T?`<button id="ucp" style="width:100%;margin-top:8px;background:#141d2c;border:1px solid #2a3a52;color:#e4c98a;border-radius:9px;padding:9px">复制编制回执</button>`:''}`;
     const cp=document.getElementById('ucp');
     if(cp)cp.onclick=()=>{
-      const txt=`【集团军编制】\n${army.value||'（未命名）'}\n`+rows.map(r=>`${UNITS[r.i].n} ×${r.q}`).join('\n')+
-        `\n兵力 ${t} · 攻 ${atk} · 防 ${df} · 招募 ${cost} 金 · 维护 ${maint.toFixed(1)}`;
+      let txt=`【集团军编制】\n${army.value||'（未命名）'}`;
+      ['前','中','后'].forEach(g=>{
+        const S=sumOf(g); if(!S.rows.length)return;
+        txt+=`\n${g}军：`+S.rows.map(r=>`${UNITS[r.i].n}×${r.q}`).join('、')+`（${S.t}兵 ${S.a}/${S.d}）`;
+      });
+      txt+=`\n合计：${T} 兵 · 攻 ${A} · 防 ${D} · 招募 ${C} 金 · 维护 ${M.toFixed(1)}`;
       copy(txt,cp);
     };
   }
   btn.onclick=()=>{const i=+sel.value,q=Math.max(1,+num.value||1);
-    const ex=rows.find(r=>r.i===i); if(ex)ex.q+=q; else rows.push({i,q}); render();};
+    const ex=rows.find(r=>r.i===i&&r.line===cur); if(ex)ex.q+=q; else rows.push({i,q,line:cur}); render();};
   army.oninput=render;
-  // 回合行动
   let acts=[{t:'建造',d:'',c:0},{t:'建造',d:'',c:0},{t:'建造',d:'',c:0}];
   function renderActs(){
     ACTS.innerHTML=acts.map((a,i)=>`<div style="display:flex;gap:6px;margin-bottom:8px;align-items:center">
