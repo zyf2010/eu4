@@ -70,7 +70,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">欧 陆 风 云 · 数 据 台</h1><button id="idbtn" style="background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:9px;padding:6px 10px;font-size:12px">登录</button></div>
-  <div class="sub">第 4 回合 · 更新于 2026-11-27 21:37</div>
+  <div class="sub">第 4 回合 · 更新于 2026-11-27 21:38</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -821,18 +821,15 @@ setTimeout(tryAutoG,60);
 (function(){
   const sel=document.getElementById('ec'),pw=document.getElementById('ep'),btn=document.getElementById('eb'),out=document.getElementById('eout');
   sel.innerHTML=Object.keys(ENC).sort().map(k=>`<option>${k}</option>`).join('');
-  btn.onclick=()=>{
-    const c=sel.value,p=pw.value.trim();
-    if(!p){out.innerHTML='<div class="no">请输入密码</div>';return;}
-    let ok=false;
+  let who=null;
+  function garrisonCheck(c,p){
     try{
-      const t=new TextDecoder('utf-8').decode(rc4(new TextEncoder().encode(p),b64(ENC[c])));
-      ok=t.startsWith('G1|');
-    }catch(e){}
-    if(!ok){out.innerHTML='<div class="no">密码错误</div>';return;}
-    const ev=EVENTS[0];
-    const box=document.getElementById('eout');
-    box.innerHTML=EVENTS.map((ev,idx)=>{
+      const txt=new TextDecoder('utf-8').decode(rc4(new TextEncoder().encode(p),b64(ENC[c])));
+      return txt.startsWith('G1|');
+    }catch(e){return false;}
+  }
+  function renderAll(){
+    out.innerHTML=EVENTS.map((ev,idx)=>{
       if(ev.closed) return `<div class="card" style="border-left:3px solid #4f5d73;opacity:.9;margin-bottom:10px">
         <div class="dim" style="font-size:11px">${ev.time} · ${ev.type}</div>
         <div class="name" style="margin:2px 0 6px">${ev.title}</div>
@@ -852,14 +849,14 @@ setTimeout(tryAutoG,60);
             <span style="font-size:12px;color:#9fb0c8">${o.d} → ${o.eff}</span></button>`).join('')}</div>
         <div id="ret${idx}"></div></div>`;
     }).join('');
-    box.querySelectorAll('button[data-e]').forEach(b=>b.onclick=()=>{
+    out.querySelectorAll('button[data-e]').forEach(b=>b.onclick=()=>{
       const ev=EVENTS[+b.dataset.e], o=ev.options.find(x=>x.k===b.dataset.k);
       let roll='';
-      if(o.roll){const n=1+Math.floor(Math.random()*o.roll);roll=`${n}`;}
-      const extra = o.roll ? (roll<=5?'（触发负面结果）':'（无事）') : '';
-      const txt=`【事件回执】\n国：${c}\n事件：${ev.title}\n选择：${o.k} · ${o.t}`+
+      if(o.roll){ roll=String(1+Math.floor(Math.random()*o.roll)); }
+      const extra = o.roll ? (Number(roll)<=5?'（触发负面结果）':'（无事）') : '';
+      const txt=`【事件回执】\n国：${who}\n事件：${ev.title}\n选择：${o.k} · ${o.t}`+
         (o.roll?`\n掷骰：D20=${roll}${extra}`:'')+`\n效果：${o.eff}\n时间：${new Date().toLocaleString('zh-CN')}`;
-      try{localStorage.setItem('ev_'+c+'_'+ev.id,JSON.stringify({k:o.k,roll:roll||null,at:Date.now()}));}catch(e){}
+      try{localStorage.setItem('ev_'+who+'_'+ev.id,JSON.stringify({k:o.k,roll:roll||null,at:Date.now()}));}catch(e){}
       const r=document.getElementById('ret'+b.dataset.e);
       r.innerHTML=`<div class="ok" style="font-size:13px">已选 ${o.k} · ${o.t}${o.roll?`　掷骰 D20=${roll}${extra}`:''}</div>
         <textarea readonly style="width:100%;height:130px;margin-top:8px;background:#0e1626;color:#cfd8e3;
@@ -871,7 +868,25 @@ setTimeout(tryAutoG,60);
       };
       r.scrollIntoView({behavior:'smooth',block:'nearest'});
     });
+  }
+  btn.onclick=()=>{
+    const c=sel.value, p=pw.value.trim();
+    const id=window.getID&&window.getID();
+    if(id&&id===c){ who=c; renderAll(); pw.style.display='none'; return; }
+    if(!p){ out.innerHTML='<div class="no">请输入密码</div>'; return; }
+    if(!garrisonCheck(c,p)){ out.innerHTML='<div class="no">密码错误</div>'; return; }
+    window.setID&&window.setID(c);
+    who=c; pw.style.display='none'; renderAll();
   };
+  function auto(){
+    const id=window.getID&&window.getID();
+    if(!id) return;
+    sel.value=id; who=id; pw.style.display='none';
+    btn.textContent='查看事件（已登录）';
+    renderAll();
+  }
+  window.addEventListener('eu4id',auto);
+  setTimeout(auto,80);
 })();
 
 
