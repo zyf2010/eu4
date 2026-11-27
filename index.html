@@ -70,7 +70,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">欧 陆 风 云 · 数 据 台</h1><button id="idbtn" style="background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:9px;padding:6px 10px;font-size:12px">登录</button></div>
-  <div class="sub">第 4 回合 · 更新于 2026-11-27 23:43</div>
+  <div class="sub">第 4 回合 · 更新于 2026-11-27 23:50</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -857,7 +857,9 @@ setTimeout(tryAutoG,60);
       <button id="mclose" style="background:none;border:0;color:#7d8ba1;font-size:26px;line-height:1">×</button></div>
       <div class="dim" style="font-size:12px;margin:2px 0 6px">${c.rel} · ${c.tech}${c.pick!=='无'?'（'+c.pick+'）':''} · ${c.cul}文化 · ${c.trait}特质</div>`;
     sheet.appendChild(head); sheet.appendChild(radar(c));
-    const rows=[['金币',c.g,'g'],['收入',c.inc,'inc'],['城池',c.nc,'nc'],['兵力',c.tr,'tr'],['民心',c.mo,'mo'],['人力',c.mpv+'/'+c.mpmax,'mpv']];
+    const rows=[['金币',c.g,'g'],['收入',c.inc,'inc'],['城池',c.nc,'nc'],['兵力',c.tr,'tr'],
+                ['民心',c.mo,'mo'],['人力',c.mpv+'/'+c.mpmax,'mpv'],
+                ['科技',c.tech,'tl'],['舰队',(c.ship||0)+' 艘','ship']];
     const list=document.createElement('div');
     list.style.cssText='display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px';
     list.innerHTML=rows.map(([k,v,f])=>{
