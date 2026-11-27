@@ -70,7 +70,7 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
 <body>
 <header>
   <div style="display:flex;align-items:center;gap:8px"><h1 style="flex:1">欧 陆 风 云 · 数 据 台</h1><button id="idbtn" style="background:#141d2c;border:1px solid #2a3a52;color:#9fb0c8;border-radius:9px;padding:6px 10px;font-size:12px">登录</button></div>
-  <div class="sub">第 4 回合 · 更新于 2026-11-27 22:31</div>
+  <div class="sub">第 4 回合 · 更新于 2026-11-27 22:34</div>
   <nav>
     <button class="on" data-t="c">国家</button>
     <button data-t="m">地图</button>
@@ -198,9 +198,9 @@ footer{text-align:center;color:#4f5d73;font-size:11px;padding:20px}
   <div class="card">
     <div class="name">GM 汇总</div>
     <div class="dim" style="font-size:12px;margin:4px 0 8px">把群里的回执整段粘进来，自动统计</div>
-    <textarea id="gmp" placeholder="【事件回执】&#10;国：意大利&#10;选择：甲 · 雇佣&#10;……" style="width:100%;height:130px;background:#0e1626;color:#cfd8e3;border:1px solid #24334a;border-radius:9px;padding:8px;font-size:12px"></textarea>
-    <button id="gmb" style="width:100%;margin-top:8px;background:#141d2c;border:1px solid #2a3a52;color:#c9a75f;border-radius:9px;padding:10px;font-size:14px">解析并汇总</button>
-    <div id="gmout" style="margin-top:10px"></div>
+    <textarea id="gsum" placeholder="【事件回执】&#10;国：意大利&#10;选择：甲 · 雇佣&#10;……" style="width:100%;height:130px;background:#0e1626;color:#cfd8e3;border:1px solid #24334a;border-radius:9px;padding:8px;font-size:12px"></textarea>
+    <button id="gsumB" style="width:100%;margin-top:8px;background:#141d2c;border:1px solid #2a3a52;color:#c9a75f;border-radius:9px;padding:10px;font-size:14px">解析并汇总</button>
+    <div id="gsumOut" style="margin-top:10px"></div>
   </div>
 </section>
 <section id="o" class="hide">
@@ -1053,7 +1053,7 @@ setTimeout(tryAutoG,60);
 
 
 (function(){
-  const ta=document.getElementById('gmp'),btn=document.getElementById('gmb'),out=document.getElementById('gmout');
+  const ta=document.getElementById('gsum'),btn=document.getElementById('gsumB'),out=document.getElementById('gsumOut');
   btn.onclick=()=>{
     const blocks=ta.value.split(/【事件回执】/).filter(x=>x.trim());
     const rows=blocks.map(b=>{
